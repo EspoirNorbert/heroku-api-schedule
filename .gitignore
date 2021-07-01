@@ -1,0 +1,11 @@
+env/
+*.pyc
+__pycache__
+api/
+api.txt
+requette.txt
+app.db
+.vscode/
+geckodriver.log
+api-route-test/
+.cache/

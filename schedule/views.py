@@ -25,7 +25,7 @@ bcrypt = Bcrypt(app)
 #create du jwt 
 jwt = JWTManager(app)
 #configuration de la base de donnee
-app.config.from_pyfile('config.py')
+app.config.from_object('config')
 app.config["JWT_SECRET_KEY"] = "schedule-flask-api" 
 #creation de la base
 db = SQLAlchemy(app)
