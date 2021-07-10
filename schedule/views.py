@@ -43,6 +43,32 @@ def get_auth():
     response = authenticate(data)
     return jsonify({"message" : response}), 200
     
+#get total users route
+@app.route('/schedule/v1/users/total', methods=['GET'])
+@cross_origin() # allow all origins all methods.
+def get_total_user():
+    return jsonify({"total_user" : UserController.get_total_user()}), 200
+
+@app.route('/schedule/v1/classrooms/total', methods=['GET'])
+@cross_origin() # allow all origins all methods.
+def get_total_classroom():
+    return jsonify({"total_classroooms" : ClassroomController.get_total_classroom()}), 200
+
+@app.route('/schedule/v1/rooms/total', methods=['GET'])
+@cross_origin() # allow all origins all methods.
+def get_total_room():
+    return jsonify({"total_rooms" : RoomController.get_total_room()}), 200
+
+@app.route('/schedule/v1/subjects/total', methods=['GET'])
+@cross_origin() # allow all origins all methods.
+def get_total_subject():
+    return jsonify({"total_subjets" : SubjectController.get_total_subject()}), 200
+
+@app.route('/schedule/v1/courses/total', methods=['GET'])
+@cross_origin() # allow all origins all methods.
+def get_total_course():
+    return jsonify({"total_courses" : CourseController.get_total_course()}), 200
+
 #utilisateurs route api
 @app.route('/schedule/v1/users', methods=['GET'])
 @cross_origin() # allow all origins all methods.
