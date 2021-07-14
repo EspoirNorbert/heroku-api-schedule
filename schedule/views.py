@@ -39,25 +39,21 @@ def login_developper():
 
 @app.route('/schedule/v1/users/auth', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def get_auth():
     return UserController.authenticate(request)
 
 @app.route('/schedule/v1/users', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_users():
     return UserController.get_all_users()
 
 @app.route('/schedule/v1/users/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_user():
     return UserController.add_admin(request)
 
 @app.route('/schedule/v1/users/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_user(id):
     
     if request.method == 'GET':
@@ -71,31 +67,26 @@ def handle_user(id):
 
 @app.route('/schedule/v1/users/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_user():
     return UserController.get_total_user()
 
 @app.route('/schedule/v1/students', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_students():
     return StudentController.get_all_student()
 
 @app.route('/schedule/v1/students/classroom/<string:name>', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_student_by_classroom(name):
     return StudentController.get_all_student_by_classroom(name)
 
 @app.route('/schedule/v1/students/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_student():
     return StudentController.add_student(request)
     
 @app.route('/schedule/v1/students/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_student(id):
     
     if request.method == 'GET':
@@ -109,25 +100,21 @@ def handle_student(id):
 
 @app.route('/schedule/v1/students/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_student():
     return StudentController.get_total_student()
 
 @app.route('/schedule/v1/classrooms', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_classrooms():
     return ClassroomController.get_all_classroom()
 
 @app.route('/schedule/v1/classrooms/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_classroom():
     return ClassroomController.add_classroom(request)
 
 @app.route('/schedule/v1/classrooms/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_classroom(id):
     
     if request.method == 'GET':
@@ -141,25 +128,21 @@ def handle_classroom(id):
 
 @app.route('/schedule/v1/classrooms/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_classroom():
     return ClassroomController.get_total_classroom()
 
 @app.route('/schedule/v1/managers', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_managers():
     return ManagerController.get_all_manager()
 
 @app.route('/schedule/v1/managers/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_manager():
     return ManagerController.add_manager(request)
 
 @app.route('/schedule/v1/managers/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_manager(id):
     
     if request.method == 'GET':
@@ -173,32 +156,27 @@ def handle_manager(id):
 
 @app.route('/schedule/v1/managers/<int:id>/classrooms', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_manager_classroom(id):
     return ManagerController.get_manager_classroom(id)
 
 @app.route('/schedule/v1/managers/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_manager():
     return ManagerController.get_total_manager()
 
 
 @app.route('/schedule/v1/teachers', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_teachers():
     return TeacherController.get_all_teacher()
 
 @app.route('/schedule/v1/teachers/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_teacher():
     return TeacherController.add_teacher(request)
     
 @app.route('/schedule/v1/teachers/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_teacher(id):
     
     if request.method == 'GET':
@@ -212,31 +190,26 @@ def handle_teacher(id):
 
 @app.route('/schedule/v1/teachers/<int:id>/subjects', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_teacher_subject(id):
     return TeacherController.get_teacher_subject(id)
 
 @app.route('/schedule/v1/teachers/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_teacher():
     return TeacherController.get_total_teacher()
 
 @app.route('/schedule/v1/rooms', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_rooms():
     return RoomController.get_all_room()
 
 @app.route('/schedule/v1/rooms/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_room():
     return RoomController.add_room(request)
     
 @app.route('/schedule/v1/rooms/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_room(id):
     
     if request.method == 'GET':
@@ -251,25 +224,21 @@ def handle_room(id):
 
 @app.route('/schedule/v1/courses', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_courses():
     return CourseController.get_all_courses()
 
 @app.route('/schedule/v1/courses/classroom/<string:name>', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_course_by_classroom(name):
     return CourseController.get_course_by_classroom(name)
 
 @app.route('/schedule/v1/courses/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_course():
     return CourseController.add_course(request)
     
 @app.route('/schedule/v1/courses/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_course(id):
     
     if request.method == 'GET':
@@ -283,13 +252,11 @@ def handle_course(id):
 
 @app.route('/schedule/v1/courses/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_course():
     return CourseController.get_total_course()
 
 @app.route('/schedule/v1/courses/<string:classroom>/<string:start>/<string:end>', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_course_classroom_by_week(classroom,start,end):
       return CourseController.get_course_by_week(classroom,start,end)
 
@@ -297,19 +264,16 @@ def get_course_classroom_by_week(classroom,start,end):
 
 @app.route('/schedule/v1/subjects', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_subjects():
     return SubjectController.get_all_subject()
 
 @app.route('/schedule/v1/subjects/create', methods=['POST'])
 @cross_origin()
-@jwt_required()
 def create_subject():
     return SubjectController.add_subject(request)
     
 @app.route('/schedule/v1/subjects/<int:id>', methods=['GET', 'PUT', 'DELETE'])
 @cross_origin()
-@jwt_required()
 def handle_subject(id):
     
     if request.method == 'GET':
@@ -323,13 +287,11 @@ def handle_subject(id):
 
 @app.route('/schedule/v1/subjects/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_subject():
     return SubjectController.get_total_subject()
 
 @app.route('/schedule/v1/rooms/total', methods=['GET'])
 @cross_origin()
-@jwt_required()
 def get_total_room():
     return RoomController.get_total_room()
 
