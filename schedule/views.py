@@ -1,330 +1,351 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_cors import CORS, cross_origin
-
+from flask_cors import cross_origin
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended import jwt_required
 
-#from resources.user import  UserController
-from schedule.error import *
-from schedule.auth import *
+
+app = Flask(__name__) #app
+jwt = JWTManager(app)
+app.config.from_object('config')
+app.config["JWT_SECRET_KEY"] = "schedule-flask-api" 
+db = SQLAlchemy(app)
 
 from schedule.resources.user import UserController
 from schedule.resources.student import StudentController
 from schedule.resources.manager import ManagerController
-from schedule.resources.teacher import TeacherController
 from schedule.resources.classroom import ClassroomController
+from schedule.resources.developper import DevelopperController
+from schedule.resources.teacher import TeacherController
 from schedule.resources.room import RoomController
-from schedule.resources.subject import SubjectController
 from schedule.resources.course import CourseController
-
-# Initialize Flask app with SQLAlchemy
-app = Flask(__name__)
-#create by
-bcrypt = Bcrypt(app)
-#create du jwt 
-jwt = JWTManager(app)
-#configuration de la base de donnee
-app.config.from_object('config')
-app.config["JWT_SECRET_KEY"] = "schedule-flask-api" 
-#creation de la base
-db = SQLAlchemy(app)
+from schedule.resources.subject import SubjectController
 
 @app.route('/')
-@cross_origin() # allow all origins all methods.
+@cross_origin()
 def index():
     return jsonify({"message": "Welcome to truggle api school"})
 
-@app.route('/schedule/v1/login', methods=['POST'])
-@cross_origin() # allow all origins all methods.
+@app.route('/schedule/v1/developper/signup', methods=['POST'])
+@cross_origin()
+def register_developper():
+    return DevelopperController.register(request)
+
+@app.route('/schedule/v1/developper/login', methods=['POST'])
+@cross_origin()
+def login_developper():
+    return DevelopperController.login(request)
+
+@app.route('/schedule/v1/users/auth', methods=['POST'])
+@cross_origin()
+@jwt_required()
 def get_auth():
-    data = request.get_json(force=True)
-    response = authenticate(data)
-    return jsonify({"message" : response}), 200
+    return UserController.authenticate(request)
+
+@app.route('/schedule/v1/users', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_users():
+    return UserController.get_all_users()
+
+@app.route('/schedule/v1/users/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_user():
+    return UserController.add_admin(request)
+
+@app.route('/schedule/v1/users/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_user(id):
     
-#get total users route
+    if request.method == 'GET':
+      return UserController.get_user(id)
+
+    elif request.method == 'PUT':
+        return UserController.update_user(request)
+
+    elif request.method == 'DELETE':
+        return UserController.delete_user(request)
+
 @app.route('/schedule/v1/users/total', methods=['GET'])
-@cross_origin() # allow all origins all methods.
+@cross_origin()
+@jwt_required()
 def get_total_user():
-    return jsonify({"total_user" : UserController.get_total_user()}), 200
+    return UserController.get_total_user()
+
+@app.route('/schedule/v1/students', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_students():
+    return StudentController.get_all_student()
+
+@app.route('/schedule/v1/students/classroom/<string:name>', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_student_by_classroom(name):
+    return StudentController.get_all_student_by_classroom(name)
+
+@app.route('/schedule/v1/students/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_student():
+    return StudentController.add_student(request)
+    
+@app.route('/schedule/v1/students/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_student(id):
+    
+    if request.method == 'GET':
+      return StudentController.get_student(id)
+
+    elif request.method == 'PUT':
+        return StudentController.update_student(request)
+
+    elif request.method == 'DELETE':
+        return StudentController.delete_student(request)
+
+@app.route('/schedule/v1/students/total', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_total_student():
+    return StudentController.get_total_student()
+
+@app.route('/schedule/v1/classrooms', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_classrooms():
+    return ClassroomController.get_all_classroom()
+
+@app.route('/schedule/v1/classrooms/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_classroom():
+    return ClassroomController.add_classroom(request)
+
+@app.route('/schedule/v1/classrooms/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_classroom(id):
+    
+    if request.method == 'GET':
+      return ClassroomController.get_classroom(id)
+
+    elif request.method == 'PUT':
+        return ClassroomController.update_classroom(request)
+
+    elif request.method == 'DELETE':
+        return ClassroomController.delete_classroom(request)
 
 @app.route('/schedule/v1/classrooms/total', methods=['GET'])
-@cross_origin() # allow all origins all methods.
+@cross_origin()
+@jwt_required()
 def get_total_classroom():
-    return jsonify({"total_classroooms" : ClassroomController.get_total_classroom()}), 200
+    return ClassroomController.get_total_classroom()
 
-@app.route('/schedule/v1/rooms/total', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_total_room():
-    return jsonify({"total_rooms" : RoomController.get_total_room()}), 200
+@app.route('/schedule/v1/managers', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_managers():
+    return ManagerController.get_all_manager()
 
-@app.route('/schedule/v1/subjects/total', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_total_subject():
-    return jsonify({"total_subjets" : SubjectController.get_total_subject()}), 200
+@app.route('/schedule/v1/managers/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_manager():
+    return ManagerController.add_manager(request)
+
+@app.route('/schedule/v1/managers/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_manager(id):
+    
+    if request.method == 'GET':
+      return ManagerController.get_manager(id)
+
+    elif request.method == 'PUT':
+        return ManagerController.update_manager(request)
+
+    elif request.method == 'DELETE':
+        return ManagerController.delete_manager(request)
+
+@app.route('/schedule/v1/managers/<int:id>/classrooms', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_manager_classroom(id):
+    return ManagerController.get_manager_classroom(id)
+
+@app.route('/schedule/v1/managers/total', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_total_manager():
+    return ManagerController.get_total_manager()
+
+
+@app.route('/schedule/v1/teachers', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_teachers():
+    return TeacherController.get_all_teacher()
+
+@app.route('/schedule/v1/teachers/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_teacher():
+    return TeacherController.add_teacher(request)
+    
+@app.route('/schedule/v1/teachers/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_teacher(id):
+    
+    if request.method == 'GET':
+      return TeacherController.get_teacher(id)
+
+    elif request.method == 'PUT':
+        return TeacherController.update_teacher(request)
+
+    elif request.method == 'DELETE':
+        return TeacherController.delete_teacher(request)
+
+@app.route('/schedule/v1/teachers/<int:id>/subjects', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_teacher_subject(id):
+    return TeacherController.get_teacher_subject(id)
+
+@app.route('/schedule/v1/teachers/total', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_total_teacher():
+    return TeacherController.get_total_teacher()
+
+@app.route('/schedule/v1/rooms', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_rooms():
+    return RoomController.get_all_room()
+
+@app.route('/schedule/v1/rooms/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_room():
+    return RoomController.add_room(request)
+    
+@app.route('/schedule/v1/rooms/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_room(id):
+    
+    if request.method == 'GET':
+      return RoomController.get_room(id)
+
+    elif request.method == 'PUT':
+        return RoomController.update_room(request)
+
+    elif request.method == 'DELETE':
+        return RoomController.delete_room(request)
+
+
+@app.route('/schedule/v1/courses', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_courses():
+    return CourseController.get_all_courses()
+
+@app.route('/schedule/v1/courses/classroom/<string:name>', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_course_by_classroom(name):
+    return CourseController.get_course_by_classroom(name)
+
+@app.route('/schedule/v1/courses/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_course():
+    return CourseController.add_course(request)
+    
+@app.route('/schedule/v1/courses/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_course(id):
+    
+    if request.method == 'GET':
+      return CourseController.get_course(id)
+
+    elif request.method == 'PUT':
+        return CourseController.update_course(request)
+
+    elif request.method == 'DELETE':
+        return CourseController.delete_course(request)
 
 @app.route('/schedule/v1/courses/total', methods=['GET'])
-@cross_origin() # allow all origins all methods.
+@cross_origin()
+@jwt_required()
 def get_total_course():
-    return jsonify({"total_courses" : CourseController.get_total_course()}), 200
-
-#utilisateurs route api
-@app.route('/schedule/v1/users', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_users():
-    return jsonify({
-        'Users': UserController.get_all_users() ,
-        "total_users": UserController.get_total_user(),
-        "success": "ok",
-        })
-
-@app.route('/schedule/v1/users/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_user_one(id):
-    return jsonify({"user": UserController.get_user(id)})
-
-############################# Students Route  #######################################
-@app.route('/schedule/v1/students', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_students():
-    return jsonify({"students": StudentController.get_all_student(),"success": "ok","total_student": StudentController.get_total_student()})
-
-@app.route('/schedule/v1/students', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_student():
-    data = request.get_json(force=True)
-    response = StudentController.add_student(data)
-    return jsonify({"message" : response}), 201
-
-@app.route('/schedule/v1/students/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_student_one(id):
-    return jsonify(StudentController.get_student(id))
-
-@app.route('/schedule/v1/students/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_student():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/students/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_student():
-    response = StudentController.delete_student(id)
-    return jsonify({"message" : response})
-
-############################# Manager Route  #######################################
-@app.route('/schedule/v1/managers', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_managers():
-    return jsonify({"managers": ManagerController.get_all_manager(),"success": "ok","total_manager": ManagerController.get_total_manager()})
-
-@app.route('/schedule/v1/managers', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_manager():
-    data = request.get_json(force=True)
-    response = ManagerController.add_manager(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/managers/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_manager_one(id):
-    return jsonify(ManagerController.get_manager(id))
-
-@app.route('/schedule/v1/managers/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_manager():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/managers/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_manager():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
-
-############################# Teacher Route  #######################################
-@app.route('/schedule/v1/teachers', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_teachers():
-    return jsonify({"teachers": TeacherController.get_all_teacher(),"success": "ok","total_teachers": TeacherController.get_total_teacher()})
-
-@app.route('/schedule/v1/teachers', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_teacher():
-    data = request.get_json(force=True)
-    response = TeacherController.add_teacher(data)
-    return jsonify({"message" : response})
-    
-@app.route('/schedule/v1/teachers/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_teacher_one(id):
-    return jsonify({"teacher": TeacherController.get_teacher(id)})
-
-@app.route('/schedule/v1/teachers/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_teacher():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/teachers/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_teacher():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
-
-############################# Classroom Route  #######################################
-@app.route('/schedule/v1/classrooms', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_classrooms():
-    return jsonify({"classrooms": ClassroomController.get_all_classroom(),"success": "ok","total_manager": ClassroomController.get_total_classroom()})
-
-@app.route('/schedule/v1/classrooms', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_classroom():
-    data = request.get_json(force=True)
-    response = ClassroomController.add_classroom(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/classrooms/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_classroom_one(id):
-    return jsonify({"classroom": ClassroomController.get_classroom(id)})
-
-@app.route('/schedule/v1/classrooms/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_classroom():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/classrooms/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_classroom():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
-
-############################# Subject Route  #######################################
-@app.route('/schedule/v1/subjects', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_subjects():
-    return jsonify({"subjects": SubjectController.get_all_subject(),"success": "ok","total_subject": SubjectController.get_total_subject()})
-    
-@app.route('/schedule/v1/subjects', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_subject():
-    data = request.get_json(force=True)
-    response = SubjectController.add_subject(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/subjects/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_subject_one(id):
-    return jsonify({"subject": SubjectController.get_subject(id)})
-
-@app.route('/schedule/v1/subjects/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_subject():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/subjects/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_subject():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
-
-############################# Room Route  #######################################
-@app.route('/schedule/v1/rooms', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_rooms():
-    return jsonify({"rooms": RoomController.get_all_rooms(),"success": "ok","total_rooms": RoomController.get_total_room()})
-    
-@app.route('/schedule/v1/rooms', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_room():
-    data = request.get_json(force=True)
-    response = RoomController.add_room(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/rooms/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_room_one(id):
-    return jsonify({"room": RoomController.get_room(id)})
-
-@app.route('/schedule/v1/rooms/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_room():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/rooms/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_room():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
-
-############################# Courses Route  #######################################
-@app.route('/schedule/v1/courses', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_courses():
-    return jsonify({
-        "courses": CourseController.get_all_course(),
-        "success": "ok",
-        "total_rooms": CourseController.get_total_course()
-        })
-    
-@app.route('/schedule/v1/courses', methods=['POST'])
-@cross_origin() # allow all origins all methods.
-def create_course():
-    data = request.get_json(force=True)
-    response = CourseController.add_course(data)
-    return jsonify({"message" : response})
-
-@app.route('/schedule/v1/courses/<int:id>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_course_one(id):
-    return jsonify({"course": CourseController.get_course(id)})
-
-@app.route('/schedule/v1/courses/<string:name>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
-def get_course_classroom(name):
-      return jsonify({"course": CourseController.get_course_by_class(name)})
+    return CourseController.get_total_course()
 
 @app.route('/schedule/v1/courses/<string:classroom>/<string:start>/<string:end>', methods=['GET'])
-@cross_origin() # allow all origins all methods.
+@cross_origin()
+@jwt_required()
 def get_course_classroom_by_week(classroom,start,end):
-      return jsonify(
-          {
-              "course": CourseController.get_course_by_week(classroom,start,end), 
-              "periode" : {
-                "start" : start, 
-                "end" : end
-              }
-              }
-        )
+      return CourseController.get_course_by_week(classroom,start,end)
 
-@app.route('/schedule/v1/courses/<int:id>', methods=['PUT'])
-@cross_origin() # allow all origins all methods.
-def update_course():
-    data = request.get_json(force=True)
-    response = StudentController.update_student(data)
-    return jsonify({"message" : response})
 
-@app.route('/schedule/v1/courses/<int:id>', methods=['DELETE'])
-@cross_origin() # allow all origins all methods.
-def remove_course():
-    response = ManagerController.delete_manager(id)
-    return jsonify({"message" : response})
+
+@app.route('/schedule/v1/subjects', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_subjects():
+    return SubjectController.get_all_subject()
+
+@app.route('/schedule/v1/subjects/create', methods=['POST'])
+@cross_origin()
+@jwt_required()
+def create_subject():
+    return SubjectController.add_subject(request)
+    
+@app.route('/schedule/v1/subjects/<int:id>', methods=['GET', 'PUT', 'DELETE'])
+@cross_origin()
+@jwt_required()
+def handle_subject(id):
+    
+    if request.method == 'GET':
+      return SubjectController.get_subject(id)
+
+    elif request.method == 'PUT':
+        return SubjectController.update_subject(request)
+
+    elif request.method == 'DELETE':
+        return SubjectController.delete_subject(request)
+
+@app.route('/schedule/v1/subjects/total', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_total_subject():
+    return SubjectController.get_total_subject()
+
+@app.route('/schedule/v1/rooms/total', methods=['GET'])
+@cross_origin()
+@jwt_required()
+def get_total_room():
+    return RoomController.get_total_room()
 
 @app.errorhandler(404)
-def route_not_found(error):
-    return  not_found("Route does not exist")
+def route_not_found(e):
+    return make_response(jsonify(message=str(e))),404
 
+@app.errorhandler(400)
+def route_not_found(e):
+    return make_response(jsonify(message=str(e))),400
 
+@app.errorhandler(405)
+def route_not_found(e):
+    return make_response(jsonify(message=str(e))),405
+
+@app.errorhandler(500)
+def internal_error(e):
+    return make_response(jsonify(message=str(e))),500

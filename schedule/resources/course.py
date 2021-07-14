@@ -1,116 +1,109 @@
+from flask import jsonify,make_response
+from sqlalchemy.exc import SQLAlchemyError
 from schedule.models import *
-
 
 class CourseController():
 
-    def get_all_course():
-        results = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).order_by(Course.id.desc()).all()
-        return [ CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in results ]
-    
-    def json(course,classroom,teacher,room,subject):
-        return {
-        "course_id" : course.id,
-        "classe" : classroom.name,
-        "room" : room.name,
-        "teacher": {
-            "grade": teacher.grade,
-            "firstname":User.query.join(Teacher).filter(Teacher.id==teacher.id).first().firstname,
-            "lastname":User.query.join(Teacher).filter(Teacher.id==teacher.id).first().lastname
-            },
-        "subject": subject.name,
-        "date":course.date,
-        "start_hour": course.start_hour,
-        "end_hour": course.end_hour
-        }
-        
-    def add_course(request):
-        #create room 
-        classroom = request['classroom']
-        teacher = request['teacher']
-        room = request['room']
-        subject = request['subject']
-        date = request['date']
-        start_hour = request['start_hour']
-        end_hour = request['end_hour']
-
-        #check 
-        existing_classe  = Classroom.query.filter_by(name=classroom).first()
-        existing_teacher = Teacher.query.join(User).filter(User.firstname.__eq__(teacher)).first()
-        existing_room    = Room.query.filter_by(name=room).first()
-        existing_subject = Subject.query.filter_by(name=subject).first()
-        
-        if existing_classe and existing_teacher and existing_room and existing_subject:
-           #create course 
-           course = Course(existing_teacher.id,existing_classe.id,existing_room.id,existing_subject.id,date,start_hour,end_hour)
-           #creta
-           db.session.add(course)
-           db.session.commit()
-           return "Course successful added !"
-        else:
-            return {"error" : "classe or teacher or room or subject no found" }
-        
-    def get_course(_id):
-        existing_id = Course.query.filter_by(id=_id).first()
-        if existing_id is None:
-             return "id n'existe pas dans la base de donnee"
-        else:
-            results = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).filter(Course.id ==_id).first()
-            return {
-            "course_id" : results.Course.id,
-            "classe" : results.Classroom.name,
-            "room" : results.Room.name,
-            "teacher": {
-                "grade": results.Teacher.grade,
-                "firstname":User.query.join(Teacher).filter(Teacher.id==results.Teacher.id).first().firstname,
-                "lastname":User.query.join(Teacher).filter(Teacher.id==results.Teacher.id).first().lastname
-            },
-            "subject": results.Subject.name,
-            "date":results.Course.date,
-            "start_hour":results.Course.start_hour,
-             "end_hour": results.Course.end_hour
-            } 
-    
-    def get_course_by_class(classroom):
-        #check existing classroom
-        existing_classroom = Classroom.query.filter_by(name=classroom).first()
-        
-        #check if classroom exist
-        if existing_classroom is None:
-             return "Cette classe n'existe pas dans la base de donnee"
-        else:
-            results = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).filter(Classroom.name == classroom).all()
-            return [ CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in results ]
-    
-    def get_course_by_week(classroom,start,end):
-        #check existing classroom
-        #existing_start_date = Course.query.filter_by(date=start).first()
-        #existing_end_date  =  Course.query.filter_by(date=end).first()
-        existing_classroom  = Classroom.query.filter_by(name=classroom).first()
-
-        if existing_classroom:
-            results = db.session.query(Course,Classroom,Teacher,Room,Subject). \
-            filter(Course.classroom_id==Classroom.id). \
-            filter(Course.teacher_id==Teacher.id). \
-            filter(Course.room_id==Room.id). \
-            filter(Course.subject_id==Subject.id). \
-            filter(Classroom.name == existing_classroom.name). \
-            filter(Course.date.between(start ,end)). \
-            all()
-            return [ CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in results ]
-        else:
-            return "Cette Periode et cette classe n'existe pas dans la base de donnee"
+    def get_all_courses():
+        courses = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).order_by(Course.id.desc()).all()
+        return make_response(jsonify(courses= [ CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in courses ] ,count=len(courses))),200 
 
     def get_total_course():
-        """ Get total Rooms """
-        return Course.query.count()
+        total = Course.query.count()
+        return make_response(jsonify(total_course=total)),200
     
-    def get_course_by_period(classroom):
-        #recuperer les cours
-        #les trier par periode et les renvoyer
-        periods_course = []
+    def get_teacher(teacher_id):
+        teacher = db.session.query(Teacher,User).select_from(Teacher).join(User).filter(Teacher.id==teacher_id).first() 
+        return {'teacher':{'grade': teacher.Teacher.grade,'firstname': teacher.User.firstname,'lastname':teacher.User.lastname}}
 
-    def update_course(_id):
-        pass
+    def json(course,classroom,teacher,room,subject):
+        return {"id" : course.id,"classroom" : classroom.name,"room" : room.name,"teacher": CourseController.get_teacher(teacher.id),"subject": subject.name,"date":course.date,"start_hour": course.start_hour,"end_hour": course.end_hour}
+    
+    def add_course(request):
+        try:
+            data = request.get_json(force=True)
+            #get data from api
+            teacher = data['teacher']
+            classroom = data['classroom']
+            room = data['room']
+            subject = data['subject']
+            date = data['date']
+            start_hour = data['start_hour']
+            end_hour = data['end_hour']
+            #check if teacher exist
+            existing_teacher = Teacher.query.join(User).filter(User.firstname.__eq__(teacher)).first()
+            print(existing_teacher.grade)
+            #check if classroom exist
+            existing_classroom  = Classroom.query.filter(Classroom.name.__eq__(classroom)).first()
+            print(existing_classroom.name)
+            #check if room exist
+            existing_room    = Room.query.filter(Room.name.__eq__(room)).first()
+            print(existing_room.name)
+            #check if subject exist
+            existing_subject = Subject.query.filter(Subject.name.__eq__(subject)).first()
+            print(existing_subject.name)
 
-    def delete_course(_id):
-        pass
+            if existing_classroom and existing_teacher and existing_room and existing_subject:
+                try:
+                    new_course = Course(teacher_id=existing_teacher.id,classroom_id=existing_classroom.id,subject_id=existing_subject.id,room_id=existing_room.id,date=date,start_hour=start_hour,end_hour=end_hour)
+                    db.session.add(new_course)
+                    db.session.commit()
+                    return make_response(jsonify(status='success', message='course created successfully' )),201 
+                except Exception as e:
+                    db.session.rollback()
+                    return make_response(jsonify(status='failed', message=str(e))),401 
+            else:
+                return make_response(jsonify(status='failed', message="classroom, teacher,room and subject doesn't exist")),404      
+        except SQLAlchemyError as e:
+               return make_response(jsonify(message= str(e))),500
+            
+    def get_course(_id):
+        try:
+            course = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).filter(Course.id ==_id).first()
+            if course:
+                return make_response(jsonify(course=CourseController.json(course.Course,course.Classroom,course.Teacher,course.Room,course.Subject))),200 
+            else:
+                return make_response(jsonify(message="course dont exists", status="failed")),401
+        except SQLAlchemyError as e:
+            return make_response(jsonify(message= str(e))),500
+    
+    def get_course_by_classroom(classroom):
+        try:
+            existing_classroom  = Classroom.query.filter(Classroom.name.__eq__(classroom)).first()
+            if existing_classroom:
+               courses = db.session.query(Course,Classroom,Teacher,Room,Subject).filter(Course.classroom_id==Classroom.id,Course.teacher_id==Teacher.id,Course.room_id==Room.id,Course.subject_id==Subject.id).filter(Classroom.name == classroom).all()
+               return make_response(jsonify(courses= [ CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in courses ] ,count=len(courses), classroom=classroom)),200 
+            else:
+                return make_response(jsonify(message="classroom dont exists", status="failed")),401
+        except SQLAlchemyError as e:
+            return make_response(jsonify(message= str(e))),500
+    
+    def get_course_by_week(classroom,start,end):
+        try:
+            #existing classroom
+            existing_classroom  = Classroom.query.filter(Classroom.name.__eq__(classroom)).first()
+            if existing_classroom:
+                courses = db.session.query(Course,Classroom,Teacher,Room,Subject). \
+                filter(Course.classroom_id==Classroom.id). \
+                filter(Course.teacher_id==Teacher.id). \
+                filter(Course.room_id==Room.id). \
+                filter(Course.subject_id==Subject.id). \
+                filter(Classroom.name == existing_classroom.name). \
+                filter(Course.date.between(start,end)). \
+                all()
+                return make_response(jsonify(
+                    courses=[CourseController.json(course,classroom,teacher,room,subject) for course,classroom,teacher,room,subject in courses],
+                    count=len(courses),periode={"from" : start, "to" : end}
+                    )),200 
+            else:
+                return make_response(jsonify(message="classroom dont exists", status="failed")),401
+        except SQLAlchemyError as e:
+            return make_response(jsonify(message= str(e))),500
+    
+    def update_course(request):
+        return make_response(jsonify(message= 'course updated successfully',status='success')),200
+
+    def delete_course(request):
+        return make_response(jsonify(message= 'course deleted successfully' , status='success')),200
+        
+ 
