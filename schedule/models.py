@@ -38,7 +38,7 @@ class Classroom(db.Model):
 class Student(db.Model):
     __tablename__ = 'students'
     id = db.Column(db.Integer, primary_key=True)
-    id_number = db.Column(db.Integer, unique=True, nullable=False)
+    id_number = db.Column(db.String(80), unique=True, nullable=False)
     classroom_id = db.Column(db.Integer, db.ForeignKey('classrooms.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
