@@ -71,10 +71,8 @@ class UserController():
                    
             if auth:
                 if check_password_hash(auth.password, data['password']):
-                   access_token = create_access_token(identity=auth.id)
-                   if type == 'user':
-                        auth_info = {'id': auth.id, 'type': auth.type}
-                        return make_response(jsonify(status='Successfully',token=access_token,auth=auth_info))     
+                    access_token = create_access_token(identity=auth.id)
+                    return make_response(jsonify(status='Successfully',token=access_token,auth=UserController.json(auth)))     
                 else:
                    return make_response(jsonify(message='Invalid email or password', status='failed')), 401
             else:
