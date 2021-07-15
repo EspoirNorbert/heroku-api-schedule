@@ -42,6 +42,11 @@ def login_developper():
 def get_auth():
     return UserController.authenticate(request)
 
+@app.route('/schedule/v1/users/login', methods=['POST'])
+@cross_origin()
+def get_login():
+    return request.get_json(force=True)['login']
+
 @app.route('/schedule/v1/users', methods=['GET'])
 @cross_origin()
 def get_users():
